@@ -30,22 +30,142 @@ const CartProvider: React.FC = ({ children }) => {
 
   useEffect(() => {
     async function loadProducts(): Promise<void> {
-      // TODO LOAD ITEMS FROM ASYNC STORAGE
+      const listOfProducts: Product[] = [];
+      const listOfProductsKeys = await AsyncStorage.getAllKeys();
+      const listOfProductsStringfied = await AsyncStorage.multiGet(
+        listOfProductsKeys,
+      );
+
+      if (listOfProductsStringfied.length !== 0) {
+        listOfProducts.push(
+          ...listOfProductsStringfied.map(object =>
+            JSON.parse(object[1] || '{}'),
+          ),
+        );
+      }
+      setProducts([...listOfProducts]);
     }
 
     loadProducts();
   }, []);
 
   const addToCart = useCallback(async product => {
-    // TODO ADD A NEW ITEM TO THE CART
+    const productStringfied = await AsyncStorage.getItem(product.id);
+
+    if (productStringfied === null) {
+      const newProduct = product;
+      newProduct.quantity = 1;
+      await AsyncStorage.setItem(newProduct.id, JSON.stringify(newProduct));
+
+      const listOfProducts: Product[] = [];
+      const listOfProductsKeys = await AsyncStorage.getAllKeys();
+      const listOfProductsStringfied = await AsyncStorage.multiGet(
+        listOfProductsKeys,
+      );
+
+      if (listOfProductsStringfied.length !== 0) {
+        listOfProducts.push(
+          ...listOfProductsStringfied.map(object =>
+            JSON.parse(object[1] || '{}'),
+          ),
+        );
+      }
+
+      setProducts([...listOfProducts]);
+    } else {
+      const productIncrement = JSON.parse(productStringfied);
+      productIncrement.quantity += 1;
+      await AsyncStorage.setItem(
+        productIncrement.id,
+        JSON.stringify(productIncrement),
+      );
+      const listOfProducts: Product[] = [];
+      const listOfProductsKeys = await AsyncStorage.getAllKeys();
+      const listOfProductsStringfied = await AsyncStorage.multiGet(
+        listOfProductsKeys,
+      );
+
+      if (listOfProductsStringfied.length !== 0) {
+        listOfProducts.push(
+          ...listOfProductsStringfied.map(object =>
+            JSON.parse(object[1] || '{}'),
+          ),
+        );
+      }
+
+      setProducts([...listOfProducts]);
+    }
   }, []);
 
   const increment = useCallback(async id => {
-    // TODO INCREMENTS A PRODUCT QUANTITY IN THE CART
+    const productStringfied = await AsyncStorage.getItem(id);
+    const product = JSON.parse(productStringfied);
+
+    product.quantity += 1;
+    await AsyncStorage.setItem(id, JSON.stringify(product));
+
+    const listOfProducts: Product[] = [];
+    const listOfProductsKeys = await AsyncStorage.getAllKeys();
+    const listOfProductsStringfied = await AsyncStorage.multiGet(
+      listOfProductsKeys,
+    );
+
+    if (listOfProductsStringfied.length !== 0) {
+      listOfProducts.push(
+        ...listOfProductsStringfied.map(object =>
+          JSON.parse(object[1] || '{}'),
+        ),
+      );
+    }
+
+    setProducts([...listOfProducts]);
   }, []);
 
   const decrement = useCallback(async id => {
-    // TODO DECREMENTS A PRODUCT QUANTITY IN THE CART
+    const productStringfied = await AsyncStorage.getItem(id);
+    const product = JSON.parse(productStringfied);
+
+    if (!productStringfied) return;
+
+    product.quantity -= 1;
+
+    if (product.quantity < 1) {
+      await AsyncStorage.removeItem(id);
+
+      const listOfProducts: Product[] = [];
+      const listOfProductsKeys = await AsyncStorage.getAllKeys();
+      const listOfProductsStringfied = await AsyncStorage.multiGet(
+        listOfProductsKeys,
+      );
+
+      if (listOfProductsStringfied.length !== 0) {
+        listOfProducts.push(
+          ...listOfProductsStringfied.map(object =>
+            JSON.parse(object[1] || '{}'),
+          ),
+        );
+      }
+
+      setProducts([...listOfProducts]);
+    } else {
+      await AsyncStorage.setItem(product.id, JSON.stringify(product));
+
+      const listOfProducts: Product[] = [];
+      const listOfProductsKeys = await AsyncStorage.getAllKeys();
+      const listOfProductsStringfied = await AsyncStorage.multiGet(
+        listOfProductsKeys,
+      );
+
+      if (listOfProductsStringfied.length !== 0) {
+        listOfProducts.push(
+          ...listOfProductsStringfied.map(object =>
+            JSON.parse(object[1] || '{}'),
+          ),
+        );
+      }
+
+      setProducts([...listOfProducts]);
+    }
   }, []);
 
   const value = React.useMemo(
